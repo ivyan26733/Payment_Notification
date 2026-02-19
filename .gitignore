@@ -1,0 +1,30 @@
+node_modules
+pnpm-lock.yaml
+
+# Env / secrets
+.env
+.env.*
+
+# Logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Build artifacts
+dist/
+coverage/
+
+# Local databases / docker volumes
+pgdata/
+redis-data/
+
+# Cursor / editor artifacts
+.cursor/
+

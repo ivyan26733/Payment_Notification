@@ -1,0 +1,108 @@
+# docker-compose.yml
+# Spins up the entire webhook dispatcher system with one command:
+#   docker-compose up --build
+#
+# Services started:
+#   postgres      → database (port 5432)
+#   redis         → queue backing store (port 6379)
+#   api           → ingestion API on POST /events (port 3000)
+#   worker        → dispatcher that delivers webhooks (no exposed port)
+#   mock-receiver → chaotic fake merchant server (port 4000)
+
+version: "3.9"
+
+services:
+
+  # ── PostgreSQL ─────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: webhook_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: webhook_db
+    ports:
+      - "5432:5432"          # Expose so you can connect with psql or a GUI tool
+    volumes:
+      - postgres_data:/var/lib/postgresql/data   # Data persists across docker-compose restarts
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── Redis ──────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: webhook_redis
+    ports:
+      - "6379:6379"          # Expose so you can inspect with redis-cli
+    command: redis-server --appendonly yes   # AOF persistence — survives restarts (Constraint A ✅)
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── Mock Receiver (start this before the API so TARGET_URL is ready) ───────
+  mock-receiver:
+    build:
+      context: .
+      dockerfile: mock-receiver/Dockerfile
+    container_name: webhook_mock_receiver
+    ports:
+      - "4000:4000"
+    environment:
+      WEBHOOK_SECRET: super_secret_key_change_in_production
+
+  # ── Ingestion API ──────────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: webhook_api
+    command: node src/index.js
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://postgres:password@postgres:5432/webhook_db
+      REDIS_URL: redis://redis:6379
+      WEBHOOK_SECRET: super_secret_key_change_in_production
+      TARGET_URL: http://mock-receiver:4000/receive   # Internal Docker network URL
+      PORT: 3000
+    depends_on:
+      postgres:
+        condition: service_healthy   # Wait until Postgres is actually ready
+      redis:
+        condition: service_healthy   # Wait until Redis is actually ready
+      mock-receiver:
+        condition: service_started
+
+  # ── Dispatcher Worker ──────────────────────────────────────────────────────
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: webhook_worker
+    command: node src/worker.js
+    environment:
+      DATABASE_URL: postgresql://postgres:password@postgres:5432/webhook_db
+      REDIS_URL: redis://redis:6379
+      WEBHOOK_SECRET: super_secret_key_change_in_production
+      TARGET_URL: http://mock-receiver:4000/receive
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mock-receiver:
+        condition: service_started
+    # Restart automatically if the worker crashes — keeps at-least-once guarantee intact
+    restart: on-failure
+
+# ── Named Volumes ──────────────────────────────────────────────────────────
+volumes:
+  postgres_data:
+  redis_data:

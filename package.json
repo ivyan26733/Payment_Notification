@@ -1,0 +1,20 @@
+{
+  "name": "webhook-dispatcher",
+  "version": "1.0.0",
+  "description": "Guaranteed at-least-once webhook delivery engine",
+  "main": "src/index.js",
+  "type" : "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "worker": "node src/worker.js",
+    "mock-receiver": "node mock-receiver/server.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "bullmq": "^5.1.0",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "ioredis": "^5.3.2",
+    "pg": "^8.11.3"
+  }
+}

@@ -1,14 +1,3 @@
-// signature.js
-// Handles HMAC-SHA256 signing for outgoing webhooks.
-// This solves Constraint C — the merchant can verify the request is genuinely from us.
-//
-// How it works:
-//   1. We take the raw JSON body as a string
-//   2. We run HMAC-SHA256 on it using our shared secret key
-//   3. We attach the result as a header: X-Webhook-Signature
-//   4. The merchant runs the same process on their end and compares signatures
-//   If they match → request is genuine. If not → reject it.
-
 import { createHmac, timingSafeEqual } from "crypto";
 import dotenv from "dotenv";
 

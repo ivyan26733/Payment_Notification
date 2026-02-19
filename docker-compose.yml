@@ -40,8 +40,8 @@ services:
   # ── Mock Receiver ─────────────────────────────────────────────────────────
   mock-receiver:
     build:
-      context: ./mock-receiver      # ✅ FIXED
-      dockerfile: Dockerfile        # ✅ FIXED
+      context: .    
+      dockerfile: mock-receiver/Dockerfile       
     container_name: webhook_mock_receiver
     ports:
       - "4000:4000"

@@ -16,7 +16,7 @@ export async function recoverPendingJobs() {
     return;
   }
 
-  console.log(`⚠️  Found ${pendingJobs.length} orphaned job(s) — re-enqueuing...`);
+  console.log(` Found ${pendingJobs.length} orphaned job(s) — re-enqueuing...`);
 
   const webhookQueue = getWebhookQueue();
 
@@ -26,7 +26,7 @@ export async function recoverPendingJobs() {
       { jobId: job.id, payload: job.payload, targetUrl: job.target_url },
       { jobId: `recovery-${job.id}` }
     );
-    console.log(`   ♻️  Re-enqueued DB job #${job.id}`);
+    console.log(` Re-enqueued DB job #${job.id}`);
   }
 
   console.log(`✅ Recovery complete — ${pendingJobs.length} job(s) re-enqueued`);

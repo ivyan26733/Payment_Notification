@@ -50,7 +50,7 @@ async function start() {
   });
 
   async function shutdown(signal) {
-    console.log(`\n🛑 ${signal} received — shutting down API gracefully...`);
+    console.log(`\n ${signal} received — shutting down API gracefully...`);
 
     server.close(async () => {
       console.log("🔒 HTTP server closed — no new requests accepted");
@@ -66,7 +66,7 @@ async function start() {
         console.log("✅ Shutdown complete");
         process.exit(0);
       } catch (err) {
-        console.error("❌ Error during shutdown:", err?.message ?? err);
+        console.error(" Error during shutdown:", err?.message ?? err);
         process.exit(1);
       }
     });

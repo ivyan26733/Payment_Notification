@@ -73,7 +73,7 @@ router.post("/events", async (req, res) => {
       jobId,
     });
   } catch (err) {
-    console.error("❌ Failed to ingest event:", err.message);
+    console.error(" Failed to ingest event:", err.message);
     return res.status(500).json({ error: "Internal server error" });
   }
 });

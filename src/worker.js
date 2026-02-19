@@ -1,13 +1,5 @@
 // worker.js
 // The Dispatcher — picks up jobs from BullMQ and delivers them to the merchant.
-//
-// This is a SEPARATE process from the API server (run with: npm run worker).
-// Keeping them separate means the dispatcher keeps running even if the API restarts,
-// and we can scale them independently.
-//
-// BullMQ handles all the retry + backoff logic for us automatically.
-// If this process is killed mid-delivery, BullMQ + Redis ensures the job
-// is NOT lost — it will be picked up again on restart. (Constraint A ✅)
 
 import { Worker } from "bullmq";
 import axios from "axios";
@@ -27,14 +19,14 @@ async function checkRedisAOF(redis) {
     if (aofEnabled) {
       console.log("✅ Redis AOF persistence is ON — queue survives Redis restarts");
     } else {
-      console.warn("⚠️  WARNING: Redis AOF persistence is OFF.");
+      console.warn("WARNING: Redis AOF persistence is OFF.");
       console.warn(
         "   Jobs only in the queue (not yet in Postgres) may be lost if Redis restarts."
       );
       console.warn("   Start Redis with: redis-server --appendonly yes");
     }
   } catch (err) {
-    console.warn("⚠️  Could not check Redis persistence config:", err?.message ?? err);
+    console.warn(" Could not check Redis persistence config:", err?.message ?? err);
   }
 }
 
@@ -46,7 +38,7 @@ async function startWorker() {
     await redis.connect();
   } catch (err) {
     console.error(
-      `❌ Redis is not reachable at ${process.env.REDIS_URL}. Start Redis, then re-run: pnpm run worker\n` +
+      ` Redis is not reachable at ${process.env.REDIS_URL}. Start Redis, then re-run: pnpm run worker\n` +
         `   Error: ${err?.message ?? err}`
     );
     process.exit(1);
@@ -113,15 +105,15 @@ async function startWorker() {
   });
 
   worker.on("error", (err) => {
-    console.error("⚠️  Worker error:", err?.message ?? err);
+    console.error("  Worker error:", err?.message ?? err);
   });
 
   async function shutdown(signal) {
-    console.log(`\n🛑 ${signal} received — shutting down worker gracefully...`);
+    console.log(`\n ${signal} received — shutting down worker gracefully...`);
 
     try {
       await worker.pause();
-      console.log("⏸️  Worker paused — waiting for active jobs to finish...");
+      console.log("  Worker paused — waiting for active jobs to finish...");
 
       await worker.close();
       console.log("✅ All active jobs finished");
@@ -132,7 +124,7 @@ async function startWorker() {
       console.log("✅ Worker shutdown complete");
       process.exit(0);
     } catch (err) {
-      console.error("❌ Error during worker shutdown:", err?.message ?? err);
+      console.error(" Error during worker shutdown:", err?.message ?? err);
       process.exit(1);
     }
   }
@@ -140,7 +132,7 @@ async function startWorker() {
   process.on("SIGTERM", () => shutdown("SIGTERM"));
   process.on("SIGINT", () => shutdown("SIGINT"));
 
-  console.log("⚙️  Dispatcher worker started — listening for webhook jobs...");
+  console.log("  Dispatcher worker started — listening for webhook jobs...");
 }
 
 startWorker().catch((err) => {

@@ -15,9 +15,8 @@ let webhookQueue;
 export function getRedisConnection() {
   if (!redisConnection) {
     redisConnection = new IORedis(process.env.REDIS_URL, {
-      maxRetriesPerRequest: null, // Required by BullMQ
-      enableOfflineQueue: false, // Fail fast if Redis is down
-      lazyConnect: true, // Don't connect at import time
+      maxRetriesPerRequest: null,
+      lazyConnect: true,
     });
   }
   return redisConnection;

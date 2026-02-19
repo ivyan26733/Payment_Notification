@@ -62,7 +62,7 @@ app.post("/receive", async (req, res) => {
   if (random < 0.40) {
     // 40% — immediate 500 error (server error)
     stats.failed++;
-    console.log(`   💥 Simulating 500 error`);
+    console.log(`  Simulating 500 error`);
     return res.status(500).json({ error: "Internal server error" });
   }
 
@@ -78,7 +78,7 @@ app.post("/receive", async (req, res) => {
   // 30% — success!
   stats.succeeded++;
   console.log(`   ✅ Success! Accepting this webhook.`);
-  console.log(`   📊 Stats so far — Total: ${stats.received} | Success: ${stats.succeeded} | Failed: ${stats.failed}`);
+  console.log(`Stats so far — Total: ${stats.received} | Success: ${stats.succeeded} | Failed: ${stats.failed}`);
 
   return res.status(200).json({ received: true });
 });

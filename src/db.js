@@ -76,7 +76,7 @@ export async function initDB(retries = 10, delayMs = 3000) {
       console.log("✅ Database ready — webhook_jobs table exists");
       return;
     } catch (err) {
-      console.log(`⏳ DB init attempt ${attempt}/${retries} failed: ${err.message}`);
+      console.log(` DB init attempt ${attempt}/${retries} failed: ${err.message}`);
       if (attempt === retries) {
         throw new Error(`Database unavailable after ${retries} attempts: ${err.message}`);
       }

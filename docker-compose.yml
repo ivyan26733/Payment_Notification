@@ -1,15 +1,6 @@
 # docker-compose.yml
 # Spins up the entire webhook dispatcher system with one command:
 #   docker-compose up --build
-#
-# Services started:
-#   postgres      → database (port 5432)
-#   redis         → queue backing store (port 6379)
-#   api           → ingestion API on POST /events (port 3000)
-#   worker        → dispatcher that delivers webhooks (no exposed port)
-#   mock-receiver → chaotic fake merchant server (port 4000)
-
-version: "3.9"
 
 services:
 
@@ -22,9 +13,9 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: webhook_db
     ports:
-      - "5432:5432"          # Expose so you can connect with psql or a GUI tool
+      - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data   # Data persists across docker-compose restarts
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -36,8 +27,8 @@ services:
     image: redis:7-alpine
     container_name: webhook_redis
     ports:
-      - "6379:6379"          # Expose so you can inspect with redis-cli
-    command: redis-server --appendonly yes   # AOF persistence — survives restarts (Constraint A ✅)
+      - "6379:6379"
+    command: redis-server --appendonly yes
     volumes:
       - redis_data:/data
     healthcheck:
@@ -46,11 +37,11 @@ services:
       timeout: 5s
       retries: 10
 
-  # ── Mock Receiver (start this before the API so TARGET_URL is ready) ───────
+  # ── Mock Receiver ─────────────────────────────────────────────────────────
   mock-receiver:
     build:
-      context: .
-      dockerfile: mock-receiver/Dockerfile
+      context: ./mock-receiver      # ✅ FIXED
+      dockerfile: Dockerfile        # ✅ FIXED
     container_name: webhook_mock_receiver
     ports:
       - "4000:4000"
@@ -70,13 +61,13 @@ services:
       DATABASE_URL: postgresql://postgres:password@postgres:5432/webhook_db
       REDIS_URL: redis://redis:6379
       WEBHOOK_SECRET: super_secret_key_change_in_production
-      TARGET_URL: http://mock-receiver:4000/receive   # Internal Docker network URL
+      TARGET_URL: http://mock-receiver:4000/receive
       PORT: 3000
     depends_on:
       postgres:
-        condition: service_healthy   # Wait until Postgres is actually ready
+        condition: service_healthy
       redis:
-        condition: service_healthy   # Wait until Redis is actually ready
+        condition: service_healthy
       mock-receiver:
         condition: service_started
 
@@ -99,7 +90,6 @@ services:
         condition: service_healthy
       mock-receiver:
         condition: service_started
-    # Restart automatically if the worker crashes — keeps at-least-once guarantee intact
     restart: on-failure
 
 # ── Named Volumes ──────────────────────────────────────────────────────────
